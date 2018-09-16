@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Battleship</title>
+    <link rel="stylesheet" href="/static/home.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div>
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Game</a>
+      </nav>
+      <div class="container">
+        <div class="state-1">
+          <button class="btn btn-primary btn-lg" id="playButton">Play</button>
+        </div>
+        <div class="state-2">
+          <p>Finding player</p>
+          <i class="fa fa-spinner fa-spin" style="font-size:48px;"></i>
+        </div>
+        <div class="state-3">
+          <div class="row">
+            <div class="place-ships col-8"></div>
+            <div class="col-3">
+              <div class="card text-center">
+                <img class="card-img-top" src="" alt="Card image cap">
+                <div class="card-header">
+                  
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title"></h5>
+                  <div class="card-text">
+                    <div class="start"></div>
+                    <div class="end"></div>
+                  </div>
+                  <a href="#" class="btn btn-primary place-button">Place</a>
+                </div>
+                <div class="card-footer text-muted">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="state-4">
+          <p>Waiting for Player to place ships</p>
+          <i class="fa fa-spinner fa-spin" style="font-size:48px;"></i>
+        </div>
+        <div class="state-5">
+            <div class="row">
+              <div class="your-ships col-6"></div>
+            </div>
+            <div class="row">
+              <div class="opponent-ships col-6"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <script>
+
+      // var ships = [{
+      //   name: 'Aircraft Carrier',
+      //   image: 'https://i.ytimg.com/vi/huK_wO9CWeU/maxresdefault.jpg',
+      //   size: 5
+      // }, {
+      //   name: 'Battleship',
+      //   image: 'data:image/jpeg;base64,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',
+      //   size: 4
+      // }, {
+      //   name: 'Cruiser',
+      //   image: 'http://upload.wikimedia.org/wikipedia/commons/b/be/US_Navy_030903-N-5024R-003_USS_Port_Royal_%28DDG_73%29_departed_on_deployment.jpg',
+      //   size: 3
+      // }, {
+      //   name: 'Destroyer',
+      //   image: 'https://vignette.wikia.nocookie.net/cybernations/images/e/ed/Ships-Destroyer_battleship_1.jpg/revision/20070507111249',
+      //   size: 2
+      // }, {
+      //   name: 'Submarine',
+      //   image: 'https://ep01.epimg.net/elpais/imagenes/2018/07/18/inenglish/1531905099_853875_1531909166_noticia_normal.jpg',
+      //   size: 1
+      // }]
+
+      var ships = [{
+        name: 'Cruiser',
+        image: 'http://upload.wikimedia.org/wikipedia/commons/b/be/US_Navy_030903-N-5024R-003_USS_Port_Royal_%28DDG_73%29_departed_on_deployment.jpg',
+        size: 3
+      }, {
+        name: 'Destroyer',
+        image: 'https://vignette.wikia.nocookie.net/cybernations/images/e/ed/Ships-Destroyer_battleship_1.jpg/revision/20070507111249',
+        size: 2
+      }]
+
+      let shipSelectionIndex = 0 
+      let shipSelectionLocations = []
+      let currentShipStart = null
+      let currentShipEnd = null
+      let occupiedPositions = []
+      let placeButtonPlaced = false
+      let shipsForAPI = []
+      
+      function displayCurrentShipInfo() {
+        let s = ships[shipSelectionIndex]
+        $('.state-3 .card-header').text(s.name)
+        $('.state-3 .card-img-top').attr('src', s.image)
+        $('.state-3 .card-footer').text(`Size = ${s.size}`)
+        console.log('displayCurrentShipInfo', currentShipStart)
+        if (currentShipStart != null) {
+          $('.state-3 .card-text .start').text(`Start = (${currentShipStart[0]}, ${currentShipStart[1]})`)
+        }
+
+        if (currentShipEnd != null) {
+          $('.state-3 .card-text .end').text(`End = (${currentShipEnd[0]}, ${currentShipEnd[1]})`)
+        }
+        
+      }
+
+      function generatePlaceShips(socket) {
+
+        displayCurrentShipInfo()
+        
+        $('.place-ships').empty()
+
+        for (let i = 0; i < 10; i++) {
+          let row = $('<div>').attr('class', 'row')
+          for (let j = 0; j < 10; j++) {
+            let col = $('<div>').attr('class', `col c-${i}-${j}`)
+            if (currentShipStart) {
+              if (i == currentShipStart[0] && j == currentShipStart[1]) {
+                col.addClass('currentShip')
+              }
+            } else if (currentShipEnd) {
+              if (i == currentShipEnd[0] && j == currentShipEnd[1]) {
+                col.addClass('currentShip')
+              }
+            }
+
+            for (let m = 0; m < occupiedPositions.length; m++) {
+              if (i == occupiedPositions[m][0] && j == occupiedPositions[m][1]) {
+                col.addClass('placed-ship')
+              }
+            }
+
+            col.on('click', () => {
+              if (currentShipStart == null) {
+                currentShipStart = [i, j]
+                $(`.c-${i}-${j}`).addClass('currentShip')
+              } else if (currentShipEnd == null) {
+                currentShipEnd = [i, j]
+                placeShip()
+              }
+              displayCurrentShipInfo()
+            })
+
+            row.append(col)
+          }
+          $('.place-ships').append(row)
+        }
+        
+        if (!placeButtonPlaced) {
+          $('.place-button').hide()
+          $('.place-button').on('click', () => {
+            shipsForAPI.push({
+              Location: shipSelectionLocations,
+              Size: ships[shipSelectionIndex].size
+            })
+            
+            shipSelectionLocations = []
+            shipSelectionIndex += 1
+
+            if (shipSelectionIndex >= ships.length) {
+              // If ship placement is complete
+              // -- Then emit event to server 
+              // -- Show waiting screen
+              $('.state-3').hide()
+              $('.state-4').show()
+              socket.send(JSON.stringify({
+                Event: 4,
+                Ships: shipsForAPI
+              }))
+            } else {
+              // else
+              // -- Move to next ship
+              $('.place-button').hide()
+              currentShipStart = null
+              currentShipEnd = null  
+              generatePlaceShips()
+            }
+          })
+
+          placeButtonPlaced = true
+        }
+        
+      }
+
+      function placeShip() {
+        // Validate Length
+        if (currentShipStart[0] == currentShipEnd[0]) {
+          let length = currentShipEnd[1] - currentShipStart[1]
+          // Check size
+          if (Math.abs(length + 1) != ships[shipSelectionIndex].size) {
+            currentShipStart = null
+            currentShipEnd = null
+          } else {
+            // If the length is -ve then swap
+            if (length < 0) {
+              let temp = currentShipStart
+              currentShipStart = currentShipEnd
+              currentShipEnd = temp
+            }
+
+            // Calculate places
+            for (let k = currentShipStart[1]; k <= currentShipEnd[1]; k++) {
+              let coord = [currentShipStart[0], k]
+              occupiedPositions.push(coord)
+              // Generate ship in array
+              shipSelectionLocations.push({
+                x: currentShipStart[0],
+                y: k
+              })
+            }
+
+            $('.place-button').show()
+          }
+        } else if (currentShipStart[1] == currentShipEnd[1]) {
+          let length = currentShipEnd[0] - currentShipStart[0]
+          // Check size
+          if (Math.abs(length + 1) != ships[shipSelectionIndex].size) {
+            currentShipStart = null
+            currentShipEnd = null
+          } else {
+            // If the length is -ve then swap
+            if (length < 0) {
+              let temp = currentShipStart
+              currentShipStart = currentShipEnd
+              currentShipEnd = temp
+            }
+
+            // Calculate places
+            for (let k = currentShipStart[0]; k <= currentShipEnd[0]; k++) {
+              let coord = [k, currentShipStart[1]]
+              occupiedPositions.push(coord)
+
+              // Generate ship in array
+              shipSelectionLocations.push({
+                x: k,
+                y: currentShipStart[1]
+              })
+            }
+
+            $('.place-button').show()
+          }
+        } else {
+          currentShipStart = null
+          currentShipEnd = null
+        }
+
+        generatePlaceShips()
+      } 
+
+      function init() {
+        const socket = new WebSocket("ws://localhost:8080/events")
+
+        $('#playButton').on('click', () => {
+          console.log('Sending join message')
+          socket.send(JSON.stringify({ Event: 1 }))
+          $('.state-1').hide()
+          $('.state-2').show()
+        })
+
+        socket.onopen = () => {
+          console.log('Socket Connected')
+        }
+
+        socket.onmessage = (e) => {
+          const msg = JSON.parse(e.data)
+          console.log('Message from Socket', msg)
+          if (msg.Event == 2) {
+            console.log('Game Started')
+            $('.state-2').hide()
+            $('.state-3').show()
+            generatePlaceShips(socket)
+          }
+          
+          // Your turn
+          if (msg.Event == 3) {
+            console.log('Your turn')
+            console.log('Game Started')
+            $('.state-4').hide()
+            $('.state-5').show()
+            generatePlaceShips(socket)
+          }
+        }
+      }
+      
+      init()
+      
+    </script>
+  </body>
+</html>

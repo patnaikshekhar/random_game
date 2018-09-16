@@ -1,0 +1,40 @@
+.state-1 {
+  margin-top: 25%;
+  text-align: center;
+}
+
+.state-2 {
+  margin-top: 25%;
+  text-align: center;
+  display: none;
+}
+
+.state-3 {
+  margin-top: 15%;
+  display: none;
+}
+
+.state-4 {
+  text-align: center;
+  display: none;
+}
+
+.state-3 .place-ships .row .col {
+  border: 2px solid #2980b9;
+  height: 40px;
+  width: 20px;
+}
+
+.state-3 .place-ships .row .col:hover {
+  background-color: #2ecc71;
+  border: 2px solid #2ecc71;
+}
+
+.state-3 .place-ships .currentShip {
+  background-color: #e67e22;
+}
+
+.state-3 .place-ships .placed-ship {
+  background-color: #c0392b;
+  border: 2px solid #c0392b;
+}
