@@ -207,3 +207,104 @@ func getPlayerForGame(db *sql.DB, gameID int, playerID int) int {
 
 	return userID
 }
+
+func FindGameState(db *sql.DB, gameID int) (status string, winner int) {
+
+	var win sql.NullInt64
+
+	row := db.QueryRow("SELECT status, winner FROM Games WHERE ID = $1", gameID)
+
+	err := row.Scan(&status, &win)
+
+	if err != nil {
+		log.Fatalf("Error reading from database %s", err.Error())
+		return "Error", -1
+	}
+
+	if win.Valid {
+		winner = int(win.Int64)
+	} else {
+		winner = 0
+	}
+
+	return status, winner
+}
+
+func FindShipsForPlayer(db *sql.DB, gameID int, playerID int) (ships []Ship) {
+
+	rows, err := db.Query(`
+		SELECT 
+			size, sunk,
+			xlocation1, ylocation1,
+			xlocation2, ylocation2,
+			xlocation3, ylocation3,
+			xlocation4, ylocation4,
+			xlocation5, ylocation5
+		FROM SHIPS 
+		WHERE gameid = $1 AND playerid = $2`, gameID, playerID)
+
+	if err != nil {
+		log.Fatalf("Error reading from database %s", err.Error())
+		return nil
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var ship Ship
+		var xlocation1, ylocation1, xlocation2, ylocation2, xlocation3, ylocation3, xlocation4, ylocation4, xlocation5, ylocation5 int
+
+		err := rows.Scan(&ship.Size, &ship.Sunk, &xlocation1, &ylocation1, &xlocation2, &ylocation2, &xlocation3, &ylocation3, &xlocation4, &ylocation4, &xlocation5, &ylocation5)
+
+		if err != nil {
+			log.Fatalf("Error reading from database %s", err.Error())
+			return nil
+		}
+
+		var coords []Coord
+		if xlocation1 != -1 && ylocation1 != -1 {
+			coord := Coord{
+				X: xlocation1,
+				Y: ylocation1,
+			}
+			coords = append(coords, coord)
+		}
+
+		if xlocation2 != -1 && ylocation2 != -1 {
+			coord := Coord{
+				X: xlocation2,
+				Y: ylocation2,
+			}
+			coords = append(coords, coord)
+		}
+
+		if xlocation3 != -1 && ylocation3 != -1 {
+			coord := Coord{
+				X: xlocation3,
+				Y: ylocation3,
+			}
+			coords = append(coords, coord)
+		}
+
+		if xlocation4 != -1 && ylocation4 != -1 {
+			coord := Coord{
+				X: xlocation4,
+				Y: ylocation4,
+			}
+			coords = append(coords, coord)
+		}
+
+		if xlocation5 != -1 && ylocation5 != -1 {
+			coord := Coord{
+				X: xlocation5,
+				Y: ylocation5,
+			}
+			coords = append(coords, coord)
+		}
+
+		ship.Location = coords
+		ships = append(ships, ship)
+	}
+
+	return ships
+}

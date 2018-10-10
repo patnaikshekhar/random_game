@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const GameBoardSize = 9
+
 // Coord defines a coordinate
 type Coord struct {
 	X   int
@@ -25,7 +27,7 @@ type Ship struct {
 
 // GameBoard stores the state of the board
 type GameBoard struct {
-	Coords []Coord
+	Coords [][]Coord
 }
 
 // EventName defines the type of event that can be triggered
@@ -41,8 +43,8 @@ const (
 	// GameStartedEvent Emited from Server to Client letting the client know they should start placing ships
 	GameStartedEvent EventName = 2
 
-	// YourTurnEvent Emited from Server to Client letting the client know whos move it is
-	YourTurnEvent EventName = 3
+	// GameUpdateEvent Emited from Server to Client letting the client know whos move it is
+	GameUpdateEvent EventName = 3
 
 	// PlaceShipsEvent emitted from Client to Server letting the server know where to place ships
 	PlaceShipsEvent EventName = 4
@@ -66,29 +68,95 @@ type PlaceShipsEventMessage struct {
 	Ships []Ship
 }
 
+type GameUpdateEventMessage struct {
+	MyBoard  GameBoard
+	HitBoard GameBoard
+	Status   GameState
+}
+
+type GameState int
+
+const (
+	GameStateWon       GameState = 1
+	GameStateLost      GameState = 2
+	GameStateMyTurn    GameState = 3
+	GameStateNotMyTurn GameState = 4
+)
+
 type MakeMoveEventMessage struct {
 	Location Coord
 }
 
-type MoveResultEventMessage struct {
-	Location Coord
-	Outcome  MoveOutcome
-	MyBoard  GameBoard
-	HitBoard GameBoard
-}
+// type MoveResultEventMessage struct {
+// 	Location Coord
+// 	Outcome  MoveOutcome
+// 	MyBoard  GameBoard
+// 	HitBoard GameBoard
+// }
 
-type MoveOutcome int
+// type MoveOutcome int
 
-const (
-	OutcomeWon      MoveOutcome = 1
-	OutcomeLost     MoveOutcome = 2
-	OutcomeShipSunk MoveOutcome = 3
-	OutcomeShipHit  MoveOutcome = 4
-	OutcomeShipMiss MoveOutcome = 5
-)
+// const (
+// 	OutcomeWon      MoveOutcome = 1
+// 	OutcomeLost     MoveOutcome = 2
+// 	OutcomeShipSunk MoveOutcome = 3
+// 	OutcomeShipHit  MoveOutcome = 4
+// 	OutcomeShipMiss MoveOutcome = 5
+// )
 
 type ErrorEventMessage struct {
 	Err string
+}
+
+// ConstructGameUpdateMessage constructs the state of the game from the database for the player
+func ConstructGameUpdateMessage(db *sql.DB, gameID int, playerID int, turn bool) GameUpdateEventMessage {
+
+	var result GameUpdateEventMessage
+	status, winner := FindGameState(db, gameID)
+
+	if status == "Completed" {
+		if winner == playerID {
+			result.Status = GameStateWon
+		} else {
+			result.Status = GameStateLost
+		}
+	} else {
+		if turn {
+			result.Status = GameStateMyTurn
+		} else {
+			result.Status = GameStateNotMyTurn
+		}
+	}
+
+	ships := FindShipsForPlayer(db, gameID, playerID)
+
+	// Populate My Board
+	for i := 0; i < GameBoardSize; i++ {
+
+		var row []Coord
+
+		for j := 0; j < GameBoardSize; j++ {
+
+			locationAdded := false
+
+			for _, ship := range ships {
+				for _, location := range ship.Location {
+					if location.X == i && location.Y == j {
+						row = append(row, location)
+						locationAdded = true
+					}
+				}
+			}
+
+			if !locationAdded {
+				row = append(row, Coord{i, j, true})
+			}
+		}
+
+		result.MyBoard.Coords = append(result.MyBoard.Coords, row)
+	}
+
+	return result
 }
 
 /*
@@ -161,7 +229,7 @@ func PlaceShips(db *sql.DB, cache *redis.Client, producer *kafka.Producer, messa
 
 		// -- Emit the Your Turn Event for that player
 		gameUpdateMessagePlayer := EventMessage{
-			Event: YourTurnEvent,
+			Event: GameUpdateEvent,
 			To:    playerID,
 		}
 
